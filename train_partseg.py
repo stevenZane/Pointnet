@@ -23,9 +23,9 @@ ROOT_DIR = BASE_DIR
 sys.path.append(os.path.join(ROOT_DIR, 'models'))
 
 #seg_classes = {'Earphone': [16, 17, 18], 'Motorbike': [30, 31, 32, 33, 34, 35], 'Rocket': [41, 42, 43], 'Car': [8, 9, 10, 11], 'Laptop': [28, 29], 'Cap': [6, 7], 'Skateboard': [44, 45, 46], 'Mug': [36, 37], 'Guitar': [19, 20, 21], 'Bag': [4, 5], 'Lamp': [24, 25, 26, 27], 'Table': [47, 48, 49], 'Airplane': [0, 1, 2, 3], 'Pistol': [38, 39, 40], 'Chair': [12, 13, 14, 15], 'Knife': [22, 23]}
-seg_classes={'Tree':[0, 1]}
+seg_classes = {'Tree': [0, 1]}
 seg_label_to_cat = {} # {0:Airplane, 1:Airplane, ...49:Table}
-for cat in seg_classes.keys():#通过遍历产生部件字典
+for cat in seg_classes.keys():
     for label in seg_classes[cat]:
         seg_label_to_cat[label] = cat
 
@@ -40,14 +40,14 @@ def to_categorical(y, num_classes):
 def parse_args():
     parser = argparse.ArgumentParser('Model')
     parser.add_argument('--model', type=str, default='pointnet2_part_seg_msg', help='model name [default: pointnet2_part_seg_msg]')
-    parser.add_argument('--batch_size', type=int, default=2, help='Batch Size during training [default: 16]')
+    parser.add_argument('--batch_size', type=int, default=100, help='Batch Size during training [default: 16]')
     parser.add_argument('--epoch',  default=251, type=int, help='Epoch to run [default: 251]')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='Initial learning rate [default: 0.001]')
     parser.add_argument('--gpu', type=str, default='0', help='GPU to use [default: GPU 0]')
     parser.add_argument('--optimizer', type=str, default='Adam', help='Adam or SGD [default: Adam]')
     parser.add_argument('--log_dir', type=str, default=None, help='Log path [default: None]')
     parser.add_argument('--decay_rate', type=float, default=1e-4, help='weight decay [default: 1e-4]')
-    parser.add_argument('--npoint', type=int,  default=4096, help='Point Number [default: 2048]')
+    parser.add_argument('--npoint', type=int,  default=2048, help='Point Number [default: 2048]')
     parser.add_argument('--normal', action='store_true', default=False, help='Whether to use normal information [default: False]')
     parser.add_argument('--step_size', type=int,  default=20, help='Decay step for lr decay [default: every 20 epochs]')
     parser.add_argument('--lr_decay', type=float,  default=0.5, help='Decay rate for lr decay [default: 0.5]')
@@ -98,8 +98,6 @@ def main(args):
     testDataLoader = torch.utils.data.DataLoader(TEST_DATASET, batch_size=args.batch_size,shuffle=False, num_workers=4)
     log_string("The number of training data is: %d" % len(TRAIN_DATASET))
     log_string("The number of test data is: %d" %  len(TEST_DATASET))
-    #num_classes = 16#物体类别数
-    #num_part = 50#总部件数
     num_classes = 1
     num_part = 2
     '''MODEL LOADING'''

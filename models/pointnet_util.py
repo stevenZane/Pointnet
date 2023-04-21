@@ -79,7 +79,7 @@ def farthest_point_sample(xyz, npoint):
         centroid = xyz[batch_indices, farthest, :].view(B, 1, 3)#得到当前采样点的坐标 B*3
         dist = torch.sum((xyz - centroid) ** 2, -1)#计算当前采样点与其他点的距离
         mask = dist < distance#选择距离最近的来更新距离（更新维护这个表）
-        distance[mask] = dist[mask]#更新distance表
+        distance[mask] = dist[mask]#
         farthest = torch.max(distance, -1)[1]#重新计算得到最远点索引（在更新的表中选择距离最大的那个点）
     return centroids
 
@@ -188,27 +188,27 @@ class PointNetSetAbstraction(nn.Module):
             new_points_concat: sample points feature data, [B, D', S]
         """
         xyz = xyz.permute(0, 2, 1)
-        #print(xyz.shape)
+        print(xyz.shape)
         if points is not None:
             points = points.permute(0, 2, 1)
-        #print(points.shape)
+        print(points.shape)
         if self.group_all:
             new_xyz, new_points = sample_and_group_all(xyz, points)
         else:
             new_xyz, new_points = sample_and_group(self.npoint, self.radius, self.nsample, xyz, points)
         # new_xyz: sampled points position data, [B, npoint, C]
         # new_points: sampled points data, [B, npoint, nsample, C+D]
-        #print(new_points.shape)
+        print(new_points.shape)
         new_points = new_points.permute(0, 3, 2, 1) # [B, C+D, nsample,npoint]
-        #print(new_points.shape)
+        print(new_points.shape)
         for i, conv in enumerate(self.mlp_convs):
             bn = self.mlp_bns[i]
             new_points =  F.relu(bn(conv(new_points)))
-        #print(new_points.shape)
+        print(new_points.shape)
         new_points = torch.max(new_points, 2)[0]
-        #print(new_points.shape)
+        print(new_points.shape)
         new_xyz = new_xyz.permute(0, 2, 1)
-        #print(new_xyz.shape)
+        print(new_xyz.shape)
         return new_xyz, new_points
 
 
@@ -246,16 +246,15 @@ class PointNetSetAbstractionMsg(nn.Module):
             points = points.permute(0, 2, 1) ##就是额外提取的特征，第一次的时候就是那个法向量特征
         print(points.shape)
         B, N, C = xyz.shape
-        S = self.npoint#选择的中心点个数
-        new_xyz = index_points(xyz, farthest_point_sample(xyz, S))#采样后的点---依据xyz位置信息采样S个点，根据索引拿到所有点的具体值存放在new_xyz中
+        S = self.npoint
+        new_xyz = index_points(xyz, farthest_point_sample(xyz, S))#采样后的点
         print(new_xyz.shape)
         new_points_list = []
         for i, radius in enumerate(self.radius_list):
             K = self.nsample_list[i]
             group_idx = query_ball_point(radius, K, xyz, new_xyz)#返回的是索引
             grouped_xyz = index_points(xyz, group_idx)#得到各个组中实际点
-            grouped_xyz -= new_xyz.view(B, S, 1, C)#去均值操作 各个点的值-索引为1的点的值，索引为1的点是new_xyz，相当于簇的中心点
-
+            grouped_xyz -= new_xyz.view(B, S, 1, C)#去mean new_xyz相当于簇的中心点
             if points is not None:
                 grouped_points = index_points(points, group_idx)
                 grouped_points = torch.cat([grouped_points, grouped_xyz], dim=-1)
@@ -264,7 +263,7 @@ class PointNetSetAbstractionMsg(nn.Module):
                 grouped_points = grouped_xyz
 
             grouped_points = grouped_points.permute(0, 3, 2, 1)  # [B, D, K, S]
-            print(grouped_points.shape)#batch,channel,pointnum,group
+            print(grouped_points.shape)
             for j in range(len(self.conv_blocks[i])):
                 conv = self.conv_blocks[i][j]
                 bn = self.bn_blocks[i][j]
@@ -303,42 +302,42 @@ class PointNetFeaturePropagation(nn.Module):
         """
         xyz1 = xyz1.permute(0, 2, 1)
         xyz2 = xyz2.permute(0, 2, 1)
-        #print(xyz1.shape)
-        #print(xyz2.shape)
+        print(xyz1.shape)
+        print(xyz2.shape)
 
         points2 = points2.permute(0, 2, 1)
-        #print(points2.shape)
+        print(points2.shape)
         B, N, C = xyz1.shape
         _, S, _ = xyz2.shape
 
         if S == 1:
             interpolated_points = points2.repeat(1, N, 1)
-            #print(interpolated_points.shape)
+            print(interpolated_points.shape)
         else:
             dists = square_distance(xyz1, xyz2)
-            #print(dists.shape)
+            print(dists.shape)
             dists, idx = dists.sort(dim=-1)
             dists, idx = dists[:, :, :3], idx[:, :, :3]  # [B, N, 3]
 
             dist_recip = 1.0 / (dists + 1e-8)
             norm = torch.sum(dist_recip, dim=2, keepdim=True)
             weight = dist_recip / norm
-            #print(weight.shape)
-            #print(index_points(points2, idx).shape)
+            print(weight.shape)
+            print(index_points(points2, idx).shape)
             interpolated_points = torch.sum(index_points(points2, idx) * weight.view(B, N, 3, 1), dim=2)
-            #print(interpolated_points.shape)
+            print(interpolated_points.shape)
 
         if points1 is not None:
             points1 = points1.permute(0, 2, 1)
             new_points = torch.cat([points1, interpolated_points], dim=-1)
         else:
             new_points = interpolated_points
-        #print(new_points.shape)
+        print(new_points.shape)
         new_points = new_points.permute(0, 2, 1)
-        #print(new_points.shape)
+        print(new_points.shape)
         for i, conv in enumerate(self.mlp_convs):
             bn = self.mlp_bns[i]
             new_points = F.relu(bn(conv(new_points)))
-        #print(new_points.shape)
+        print(new_points.shape)
         return new_points
 
