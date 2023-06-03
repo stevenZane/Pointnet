@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 
 
 class S3DISDataset(Dataset):
-    def __init__(self, split='train', data_root='trainval_fullarea', num_point=4096, test_area=5, block_size=1.0, sample_rate=1.0, transform=None):
+    def __init__(self, split='train', data_root='trainval_fullarea', num_point=4096, test_area=2, block_size=1.0, sample_rate=1.0, transform=None):
         super().__init__()
         self.num_point = num_point
         self.block_size = block_size
@@ -18,12 +18,14 @@ class S3DISDataset(Dataset):
         self.room_points, self.room_labels = [], []
         self.room_coord_min, self.room_coord_max = [], []
         num_point_all = []
-        labelweights = np.zeros(13)
+        #labelweights = np.zeros(13)
+        labelweights = np.zeros(10)
         for room_name in rooms_split:
             room_path = os.path.join(data_root, room_name)
             room_data = np.load(room_path)  # xyzrgbl, N*7
             points, labels = room_data[:, 0:6], room_data[:, 6]  # xyzrgb, N*6; l, N
-            tmp, _ = np.histogram(labels, range(14))
+            #tmp, _ = np.histogram(labels, range(14))
+            tmp, _ = np.histogram(labels, range(11))
             labelweights += tmp
             coord_min, coord_max = np.amin(points, axis=0)[:3], np.amax(points, axis=0)[:3]
             self.room_points.append(points), self.room_labels.append(labels)
@@ -80,7 +82,7 @@ class S3DISDataset(Dataset):
 
 class ScannetDatasetWholeScene():
     # prepare to give prediction on each points
-    def __init__(self, root, block_points=4096, split='test', test_area=5, stride=0.5, block_size=1.0, padding=0.001):
+    def __init__(self, root, block_points=4096, split='test', test_area=2, stride=0.5, block_size=1.0, padding=0.001):
         self.block_points = block_points
         self.block_size = block_size
         self.padding = padding
@@ -105,9 +107,11 @@ class ScannetDatasetWholeScene():
             self.room_coord_min.append(coord_min), self.room_coord_max.append(coord_max)
         assert len(self.scene_points_list) == len(self.semantic_labels_list)
 
-        labelweights = np.zeros(13)
+        #labelweights = np.zeros(13)
+        labelweights = np.zeros(10)
         for seg in self.semantic_labels_list:
-            tmp, _ = np.histogram(seg, range(14))
+            #tmp, _ = np.histogram(seg, range(14))
+            tmp, _ = np.histogram(seg, range(11))
             self.scene_points_num.append(seg.shape[0])
             labelweights += tmp
         labelweights = labelweights.astype(np.float32)
@@ -167,8 +171,8 @@ class ScannetDatasetWholeScene():
         return len(self.scene_points_list)
 
 if __name__ == '__main__':
-    data_root = '/data/yxu/PointNonLocal/data/stanford_indoor3d/'
-    num_point, test_area, block_size, sample_rate = 4096, 5, 1.0, 0.01
+    data_root = 'data/s3dis/stanford_indoor3d/'
+    num_point, test_area, block_size, sample_rate = 4096, 2, 1.0, 0.01
 
     point_data = S3DISDataset(split='train', data_root=data_root, num_point=num_point, test_area=test_area, block_size=block_size, sample_rate=sample_rate, transform=None)
     print('point data size:', point_data.__len__())

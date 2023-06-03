@@ -37,7 +37,7 @@ def farthest_point_sample(point, npoint):
     return point
 
 class ModelNetDataLoader(Dataset):
-    def __init__(self, root,  npoint=1024, split='train', uniform=False, normal_channel=True, cache_size=15000):
+    def __init__(self, root,  npoint=1024, split='train', uniform=False, normal_channel=False, cache_size=15000):
         self.root = root
         self.npoints = npoint
         self.uniform = uniform
@@ -96,8 +96,8 @@ class ModelNetDataLoader(Dataset):
 if __name__ == '__main__':
     import torch
 
-    data = ModelNetDataLoader('/data/modelnet40_normal_resampled/',split='train', uniform=False, normal_channel=True,)
-    DataLoader = torch.utils.data.DataLoader(data, batch_size=8, shuffle=True)
+    data = ModelNetDataLoader('/data/modelnet40_normal_resampled/',split='train', uniform=False, normal_channel=False,)
+    DataLoader = torch.utils.data.DataLoader(data, batch_size=6, shuffle=True)
     for point,label in DataLoader:
         print(point.shape)
         print(label.shape)
