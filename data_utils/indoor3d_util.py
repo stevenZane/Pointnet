@@ -7,20 +7,12 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(BASE_DIR)
 
-#DATA_PATH = os.path.join(ROOT_DIR, 'data','s3dis', 'Stanford3dDataset_v1.2_Aligned_Version')
-DATA_PATH = os.path.join(ROOT_DIR, 'data','s3dis', 'stanford_indoor3d')
+DATA_PATH = os.path.join(ROOT_DIR, 'data','s3dis', 'Stanford3dDataset_v1.2_Aligned_Version')
 g_classes = [x.rstrip() for x in open(os.path.join(BASE_DIR, 'meta/class_names.txt'))]
 g_class2label = {cls: i for i,cls in enumerate(g_classes)}
 g_class2color = {'tree':	[0,255,0],
                  'ground':	[0,0,255],
-                 'human':	[0,255,255],
-                 'huatan':        [255,255,0],
-                 'paizi':      [255,0,255],
-                 'ludeng':      [100,100,255],
-                 'tingzi':        [200,200,100],
-                 'wall':       [170,120,200],
-                 'zhalan':       [255,0,0],
-                 'guanmu':  [100,230,50]}
+                 'clutter':	[0,255,255],}
 g_easy_view_labels = [7,8,9,10,11,1]
 g_label2color = {g_classes.index(cls): g_class2color[cls] for cls in g_classes}
 
